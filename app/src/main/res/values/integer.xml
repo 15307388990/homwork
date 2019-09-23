@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Timeout to wait for NTP server response in milliseconds. -->
+    <integer name="config_ntpTimeout">5000</integer>
+</resources>

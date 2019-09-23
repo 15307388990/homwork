@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">创图</string>
+    <string name="config_ntpServer">2.android.pool.ntp.org</string>
+</resources>
