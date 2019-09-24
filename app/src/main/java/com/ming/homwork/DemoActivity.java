@@ -1,109 +1,147 @@
 package com.ming.homwork;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.KeyEvent;
+import android.os.Handler;
+import android.os.Message;
+import android.os.PowerManager;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import com.ming.homwork.bean.ProjectTab;
-import com.ming.homwork.bean.StationTab;
-import com.ming.homwork.tools.Tools;
-import com.ming.homwork.util.NtpTrustedTime;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class DemoActivity extends Activity {
-    private String androidId;
-    private String text;
-    private ImageView iv_img;
-    private TextView tv_text;
-    private Button btn;
-    private LinearLayout ll_layout;
-    private String imgUrl;
-    private long mExitTime;
-    private TimerTask task;
-    private TextView tv_version;
-    private String versionName;//版本名称
-    private int versionCode;//版本号
+    private String tag = "MainActivity";
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 1:
+                    checkScreenOn(null);
+                    break;
+                case 2:
+
+                    break;
+            }
+        }
+    };
+    private DevicePolicyManager policyManager;
+    private ComponentName adminReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo);
-        initView();
-
-        init();
+        adminReceiver = new ComponentName(this, ScreenOffAdminReceiver.class);
+        mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        policyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        checkAndTurnOnDeviceManager(null);
     }
 
-    public void init() {
 
-        NtpTrustedTime ntpTrustedTime = NtpTrustedTime.getInstance(this);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                new Thread() {
-//                    @Override
-//                    public void run() {
-//                        //这里写入子线程需要做的工作
-//                        ntpTrustedTime.forceRefresh();
-//                        long timer = ntpTrustedTime.currentTimeMillis();
-//                        String time = getDateformat2(timer);
-//                        //tv_version.setText();
-//                    }
-//                }.start();
-                Calendar c = Calendar.getInstance();
-                Toast.makeText(DemoActivity.this, String.valueOf(c.getTime()), Toast.LENGTH_LONG).show();
-            }
-        });
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        isOpen();
+    }
 
 
+    private void isOpen() {
+        if (policyManager.isAdminActive(adminReceiver)) {//判断超级管理员是否激活
+            showToast("设备已被激活");
+        } else {
+            showToast("设备没有被激活");
+
+        }
+    }
+
+    private PowerManager mPowerManager;
+    private PowerManager.WakeLock mWakeLock;
+
+
+    /**
+     * @param view 检测屏幕状态
+     */
+    public void checkScreen(View view) {
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        boolean screenOn = pm.isScreenOn();
+        if (!screenOn) {//如果灭屏
+            //相关操作
+            showToast("屏幕是息屏");
+        } else {
+            showToast("屏幕是亮屏");
+
+        }
+    }
+
+
+    /**
+     * @param view 亮屏
+     */
+    @SuppressLint("InvalidWakeLockTag")
+    public void checkScreenOn(View view) {
+//        mWakeLock = mPowerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "tag");
+//        mWakeLock.acquire();
+//        mWakeLock.release();
+        WindowManager.LayoutParams lp = this.getWindow().getAttributes();
+        lp.screenBrightness = 0;
+        this.getWindow().setAttributes(lp);
     }
 
     /**
-     * 时间戳转时间
+     * @param view 熄屏
      */
-    public static String getDateformat2(long time) {
-        if (time == 0) {
-            return "";
+    public void checkScreenOff(View view) {
+//        boolean admin = policyManager.isAdminActive(adminReceiver);
+//        if (admin) {
+//            policyManager.lockNow();
+//        } else {
+//            showToast("没有设备管理权限");
+//        }
+        WindowManager.LayoutParams lp = this.getWindow().getAttributes();
+        lp.screenBrightness = 0;
+        this.getWindow().setAttributes(lp);
+    }
+
+    /**
+     * @param view 熄屏并延时亮屏
+     */
+    public void checkScreenOffAndDelayOn(View view) {
+        boolean admin = policyManager.isAdminActive(adminReceiver);
+        if (admin) {
+            policyManager.lockNow();
+            handler.sendEmptyMessageDelayed(1, 3000);
+        } else {
+            showToast("没有设备管理权限");
         }
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return format.format(time);
+    }
+
+    /**
+     * @param view 检测并去激活设备管理器权限
+     */
+    public void checkAndTurnOnDeviceManager(View view) {
+        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminReceiver);
+        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "开启后就可以使用锁屏功能了...");//显示位置见图二
+        startActivityForResult(intent, 0);
 
     }
 
-
-    private void initView() {
-        iv_img = (ImageView) findViewById(R.id.iv_img);
-        tv_text = (TextView) findViewById(R.id.tv_text);
-        btn = (Button) findViewById(R.id.btn);
-        ll_layout = (LinearLayout) findViewById(R.id.ll_layout);
-        tv_version = (TextView) findViewById(R.id.tv_version);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        versionName = Tools.getVersionName(this);
-        versionCode = Tools.getVersionCode(this);
-        tv_version.setText("V." + versionName);
-        tv_version.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
-
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        checkScreenOn(null);
+        return super.onTouchEvent(event);
     }
 
+
+    private void showToast(String Str) {
+        Toast.makeText(this, Str, Toast.LENGTH_SHORT).show();
+    }
 }

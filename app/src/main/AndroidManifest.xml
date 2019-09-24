@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ming.homwork">
+    package="com.ming.homwork"
+    >
 
     <application
         android:name=".Application"
@@ -10,18 +11,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".MainActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize|locale"
-            android:screenOrientation="landscape">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 <!--        <activity-->
-<!--            android:name=".DemoActivity"-->
+<!--            android:name=".MainActivity"-->
 <!--            android:configChanges="keyboardHidden|orientation|screenSize|locale"-->
 <!--            android:screenOrientation="landscape">-->
 <!--            <intent-filter>-->
@@ -30,10 +21,32 @@
 <!--                <category android:name="android.intent.category.LAUNCHER" />-->
 <!--            </intent-filter>-->
 <!--        </activity>-->
+        <activity
+            android:name=".DemoActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|locale"
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <provider
             android:name="cn.bmob.v3.util.BmobContentProvider"
             android:authorities="com.ming.homwork.BmobContentProvider"></provider>
+        <receiver
+            android:name=".ScreenOffAdminReceiver"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_DEVICE_ADMIN" >
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_sample" />
+
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
     <!--获取GSM（2g）、WCDMA（联通3g）等网络状态的信息  -->
@@ -48,5 +61,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- 清除屏保需要的权限 -->
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+
+    <!-- 唤醒屏幕需要的权限 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 </manifest>
